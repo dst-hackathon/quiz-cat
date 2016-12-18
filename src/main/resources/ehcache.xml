@@ -22,5 +22,21 @@
 
     <cache alias="com.dst.quizcat.social.SocialUserConnection" uses-template="simple"/>
 
+    <cache alias="com.dst.quizcat.domain.Quiz" uses-template="simple"/>
+
+    <cache alias="com.dst.quizcat.domain.Quiz.questions" uses-template="simple"/>
+
+    <cache alias="com.dst.quizcat.domain.Quiz.labels" uses-template="simple"/>
+
+    <cache alias="com.dst.quizcat.domain.Question" uses-template="simple"/>
+
+    <cache alias="com.dst.quizcat.domain.Question.attachments" uses-template="simple"/>
+
+    <cache alias="com.dst.quizcat.domain.Question.labels" uses-template="simple"/>
+
+    <cache alias="com.dst.quizcat.domain.Attachment" uses-template="simple"/>
+
+    <cache alias="com.dst.quizcat.domain.Label" uses-template="simple"/>
+
     <!-- jhipster-needle-ehcache-add-entry -->
 </config>

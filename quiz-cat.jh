@@ -54,7 +54,7 @@ relationship ManyToOne {
 }
 // Set pagination options
 paginate Question with infinite-scroll
-paginate Quiz, AdditionalResource with pagination
+paginate Quiz, Attachment with pagination
 
 //dto * with mapstruct
 
