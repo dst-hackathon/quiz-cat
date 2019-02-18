@@ -1,0 +1,97 @@
+<div class="row justify-content-center">
+    <div class="col-8">
+        <form name="editForm" role="form" novalidate (ngSubmit)="save()" #editForm="ngForm">
+            <h2 id="jhi-attachment-heading" jhiTranslate="quizcatApp.attachment.home.createOrEditLabel">Create or edit a Attachment</h2>
+            <div>
+                <jhi-alert-error></jhi-alert-error>
+                <div class="form-group" [hidden]="!attachment.id">
+                    <label for="id" jhiTranslate="global.field.id">ID</label>
+                    <input type="text" class="form-control" id="id" name="id"
+                        [(ngModel)]="attachment.id" readonly />
+                </div>
+                <div class="form-group">
+                    <label class="form-control-label" jhiTranslate="quizcatApp.attachment.name" for="field_name">Name</label>
+                    <input type="text" class="form-control" name="name" id="field_name"
+                        [(ngModel)]="attachment.name" />
+                </div>
+                <div class="form-group">
+                    <label class="form-control-label" jhiTranslate="quizcatApp.attachment.imagePath" for="field_imagePath">Image Path</label>
+                    <input type="text" class="form-control" name="imagePath" id="field_imagePath"
+                        [(ngModel)]="attachment.imagePath" />
+                </div>
+                <div class="form-group">
+                    <label class="form-control-label" jhiTranslate="quizcatApp.attachment.image" for="field_image">Image</label>
+                    <div>
+                        <img [src]="'data:' + attachment.imageContentType + ';base64,' + attachment.image" style="max-height: 100px;" *ngIf="attachment.image" alt="attachment image"/>
+                        <div *ngIf="attachment.image" class="form-text text-danger clearfix">
+                            <span class="pull-left">{{attachment.imageContentType}}, {{byteSize(attachment.image)}}</span>
+                            <button type="button" (click)="clearInputImage('image', 'imageContentType', 'fileImage')" class="btn btn-secondary btn-xs pull-right">
+                                <fa-icon [icon]="'times'"></fa-icon>
+                            </button>
+                        </div>
+                        <input type="file" id="file_image" (change)="setFileData($event, attachment, 'image', true)" accept="image/*" jhiTranslate="entity.action.addimage"/>
+                    </div>
+                    <input type="hidden" class="form-control" name="image" id="field_image"
+                        [(ngModel)]="attachment.image" />
+                    <input type="hidden" class="form-control" name="imageContentType" id="field_imageContentType"
+                        [(ngModel)]="attachment.imageContentType" />
+                </div>
+                <div class="form-group">
+                    <label class="form-control-label" jhiTranslate="quizcatApp.attachment.attachmentPath" for="field_attachmentPath">Attachment Path</label>
+                    <input type="text" class="form-control" name="attachmentPath" id="field_attachmentPath"
+                        [(ngModel)]="attachment.attachmentPath" />
+                </div>
+                <div class="form-group">
+                    <label class="form-control-label" jhiTranslate="quizcatApp.attachment.attachment" for="field_attachment">Attachment</label>
+                    <div>
+                        <div *ngIf="attachment.attachment" class="form-text text-danger clearfix">
+                            <a class="pull-left" (click)="openFile(attachment.attachmentContentType, attachment.attachment)" jhiTranslate="entity.action.open">open</a><br>
+                            <span class="pull-left">{{attachment.attachmentContentType}}, {{byteSize(attachment.attachment)}}</span>
+                            <button type="button" (click)="attachment.attachment=null;attachment.attachmentContentType=null;"
+                                    class="btn btn-secondary btn-xs pull-right">
+                                <fa-icon [icon]="'times'"></fa-icon>
+                            </button>
+                        </div>
+                        <input type="file" id="file_attachment" (change)="setFileData($event, attachment, 'attachment', false)" jhiTranslate="entity.action.addblob"/>
+                    </div>
+                    <input type="hidden" class="form-control" name="attachment" id="field_attachment"
+                        [(ngModel)]="attachment.attachment" />
+                    <input type="hidden" class="form-control" name="attachmentContentType" id="field_attachmentContentType"
+                        [(ngModel)]="attachment.attachmentContentType" />
+                </div>
+                <div class="form-group">
+                    <label class="form-control-label" jhiTranslate="quizcatApp.attachment.contentType" for="field_contentType">Content Type</label>
+                    <input type="text" class="form-control" name="contentType" id="field_contentType"
+                        [(ngModel)]="attachment.contentType" required/>
+                    <div [hidden]="!(editForm.controls.contentType?.dirty && editForm.controls.contentType?.invalid)">
+                        <small class="form-text text-danger"
+                        [hidden]="!editForm.controls.contentType?.errors?.required" jhiTranslate="entity.validation.required">
+                        This field is required.
+                        </small>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-control-label" jhiTranslate="quizcatApp.attachment.comment" for="field_comment">Comment</label>
+                    <input type="text" class="form-control" name="comment" id="field_comment"
+                        [(ngModel)]="attachment.comment" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-control-label" jhiTranslate="quizcatApp.attachment.question" for="field_question">Question</label>
+                    <select class="form-control" id="field_question" name="question" [(ngModel)]="attachment.question" >
+                        <option [ngValue]="null"></option>
+                        <option [ngValue]="questionOption.id === attachment.question?.id ? attachment.question : questionOption" *ngFor="let questionOption of questions; trackBy: trackQuestionById">{{questionOption.id}}</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <button type="button" id="cancel-save" class="btn btn-secondary"  (click)="previousState()">
+                    <fa-icon [icon]="'ban'"></fa-icon>&nbsp;<span jhiTranslate="entity.action.cancel">Cancel</span>
+                </button>
+                <button type="submit" id="save-entity" [disabled]="editForm.form.invalid || isSaving" class="btn btn-primary">
+                    <fa-icon [icon]="'save'"></fa-icon>&nbsp;<span jhiTranslate="entity.action.save">Save</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -4,32 +4,40 @@ import com.dst.quizcat.QuizcatApp;
 
 import com.dst.quizcat.domain.Quiz;
 import com.dst.quizcat.repository.QuizRepository;
+import com.dst.quizcat.web.rest.errors.ExceptionTranslator;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.Validator;
 
-import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.ZoneOffset;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 
+
 import static com.dst.quizcat.web.rest.TestUtil.sameInstant;
+import static com.dst.quizcat.web.rest.TestUtil.createFormattingConversionService;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -51,17 +59,26 @@ public class QuizResourceIntTest {
     private static final String DEFAULT_DESCRIPTION = "AAAAAAAAAA";
     private static final String UPDATED_DESCRIPTION = "BBBBBBBBBB";
 
-    @Inject
+    @Autowired
     private QuizRepository quizRepository;
 
-    @Inject
+    @Mock
+    private QuizRepository quizRepositoryMock;
+
+    @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
-    @Inject
+    @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
 
-    @Inject
+    @Autowired
+    private ExceptionTranslator exceptionTranslator;
+
+    @Autowired
     private EntityManager em;
+
+    @Autowired
+    private Validator validator;
 
     private MockMvc restQuizMockMvc;
 
@@ -70,11 +87,13 @@ public class QuizResourceIntTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        QuizResource quizResource = new QuizResource();
-        ReflectionTestUtils.setField(quizResource, "quizRepository", quizRepository);
+        final QuizResource quizResource = new QuizResource(quizRepository);
         this.restQuizMockMvc = MockMvcBuilders.standaloneSetup(quizResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
-            .setMessageConverters(jacksonMessageConverter).build();
+            .setControllerAdvice(exceptionTranslator)
+            .setConversionService(createFormattingConversionService())
+            .setMessageConverters(jacksonMessageConverter)
+            .setValidator(validator).build();
     }
 
     /**
@@ -85,9 +104,9 @@ public class QuizResourceIntTest {
      */
     public static Quiz createEntity(EntityManager em) {
         Quiz quiz = new Quiz()
-                .generateDate(DEFAULT_GENERATE_DATE)
-                .timeLimit(DEFAULT_TIME_LIMIT)
-                .description(DEFAULT_DESCRIPTION);
+            .generateDate(DEFAULT_GENERATE_DATE)
+            .timeLimit(DEFAULT_TIME_LIMIT)
+            .description(DEFAULT_DESCRIPTION);
         return quiz;
     }
 
@@ -102,7 +121,6 @@ public class QuizResourceIntTest {
         int databaseSizeBeforeCreate = quizRepository.findAll().size();
 
         // Create the Quiz
-
         restQuizMockMvc.perform(post("/api/quizzes")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content(TestUtil.convertObjectToJsonBytes(quiz)))
@@ -123,16 +141,15 @@ public class QuizResourceIntTest {
         int databaseSizeBeforeCreate = quizRepository.findAll().size();
 
         // Create the Quiz with an existing ID
-        Quiz existingQuiz = new Quiz();
-        existingQuiz.setId(1L);
+        quiz.setId(1L);
 
         // An entity with an existing ID cannot be created, so this API call must fail
         restQuizMockMvc.perform(post("/api/quizzes")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(existingQuiz)))
+            .content(TestUtil.convertObjectToJsonBytes(quiz)))
             .andExpect(status().isBadRequest());
 
-        // Validate the Alice in the database
+        // Validate the Quiz in the database
         List<Quiz> quizList = quizRepository.findAll();
         assertThat(quizList).hasSize(databaseSizeBeforeCreate);
     }
@@ -151,6 +168,39 @@ public class QuizResourceIntTest {
             .andExpect(jsonPath("$.[*].generateDate").value(hasItem(sameInstant(DEFAULT_GENERATE_DATE))))
             .andExpect(jsonPath("$.[*].timeLimit").value(hasItem(DEFAULT_TIME_LIMIT.intValue())))
             .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION.toString())));
+    }
+    
+    @SuppressWarnings({"unchecked"})
+    public void getAllQuizzesWithEagerRelationshipsIsEnabled() throws Exception {
+        QuizResource quizResource = new QuizResource(quizRepositoryMock);
+        when(quizRepositoryMock.findAllWithEagerRelationships(any())).thenReturn(new PageImpl(new ArrayList<>()));
+
+        MockMvc restQuizMockMvc = MockMvcBuilders.standaloneSetup(quizResource)
+            .setCustomArgumentResolvers(pageableArgumentResolver)
+            .setControllerAdvice(exceptionTranslator)
+            .setConversionService(createFormattingConversionService())
+            .setMessageConverters(jacksonMessageConverter).build();
+
+        restQuizMockMvc.perform(get("/api/quizzes?eagerload=true"))
+        .andExpect(status().isOk());
+
+        verify(quizRepositoryMock, times(1)).findAllWithEagerRelationships(any());
+    }
+
+    @SuppressWarnings({"unchecked"})
+    public void getAllQuizzesWithEagerRelationshipsIsNotEnabled() throws Exception {
+        QuizResource quizResource = new QuizResource(quizRepositoryMock);
+            when(quizRepositoryMock.findAllWithEagerRelationships(any())).thenReturn(new PageImpl(new ArrayList<>()));
+            MockMvc restQuizMockMvc = MockMvcBuilders.standaloneSetup(quizResource)
+            .setCustomArgumentResolvers(pageableArgumentResolver)
+            .setControllerAdvice(exceptionTranslator)
+            .setConversionService(createFormattingConversionService())
+            .setMessageConverters(jacksonMessageConverter).build();
+
+        restQuizMockMvc.perform(get("/api/quizzes?eagerload=true"))
+        .andExpect(status().isOk());
+
+            verify(quizRepositoryMock, times(1)).findAllWithEagerRelationships(any());
     }
 
     @Test
@@ -182,14 +232,17 @@ public class QuizResourceIntTest {
     public void updateQuiz() throws Exception {
         // Initialize the database
         quizRepository.saveAndFlush(quiz);
+
         int databaseSizeBeforeUpdate = quizRepository.findAll().size();
 
         // Update the quiz
-        Quiz updatedQuiz = quizRepository.findOne(quiz.getId());
+        Quiz updatedQuiz = quizRepository.findById(quiz.getId()).get();
+        // Disconnect from session so that the updates on updatedQuiz are not directly saved in db
+        em.detach(updatedQuiz);
         updatedQuiz
-                .generateDate(UPDATED_GENERATE_DATE)
-                .timeLimit(UPDATED_TIME_LIMIT)
-                .description(UPDATED_DESCRIPTION);
+            .generateDate(UPDATED_GENERATE_DATE)
+            .timeLimit(UPDATED_TIME_LIMIT)
+            .description(UPDATED_DESCRIPTION);
 
         restQuizMockMvc.perform(put("/api/quizzes")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
@@ -212,15 +265,15 @@ public class QuizResourceIntTest {
 
         // Create the Quiz
 
-        // If the entity doesn't have an ID, it will be created instead of just being updated
+        // If the entity doesn't have an ID, it will throw BadRequestAlertException
         restQuizMockMvc.perform(put("/api/quizzes")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content(TestUtil.convertObjectToJsonBytes(quiz)))
-            .andExpect(status().isCreated());
+            .andExpect(status().isBadRequest());
 
         // Validate the Quiz in the database
         List<Quiz> quizList = quizRepository.findAll();
-        assertThat(quizList).hasSize(databaseSizeBeforeUpdate + 1);
+        assertThat(quizList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
@@ -228,9 +281,10 @@ public class QuizResourceIntTest {
     public void deleteQuiz() throws Exception {
         // Initialize the database
         quizRepository.saveAndFlush(quiz);
+
         int databaseSizeBeforeDelete = quizRepository.findAll().size();
 
-        // Get the quiz
+        // Delete the quiz
         restQuizMockMvc.perform(delete("/api/quizzes/{id}", quiz.getId())
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isOk());
@@ -238,5 +292,20 @@ public class QuizResourceIntTest {
         // Validate the database is empty
         List<Quiz> quizList = quizRepository.findAll();
         assertThat(quizList).hasSize(databaseSizeBeforeDelete - 1);
+    }
+
+    @Test
+    @Transactional
+    public void equalsVerifier() throws Exception {
+        TestUtil.equalsVerifier(Quiz.class);
+        Quiz quiz1 = new Quiz();
+        quiz1.setId(1L);
+        Quiz quiz2 = new Quiz();
+        quiz2.setId(quiz1.getId());
+        assertThat(quiz1).isEqualTo(quiz2);
+        quiz2.setId(2L);
+        assertThat(quiz1).isNotEqualTo(quiz2);
+        quiz1.setId(null);
+        assertThat(quiz1).isNotEqualTo(quiz2);
     }
 }

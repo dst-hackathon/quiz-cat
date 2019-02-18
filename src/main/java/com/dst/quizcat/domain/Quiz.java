@@ -1,9 +1,11 @@
 package com.dst.quizcat.domain;
 
+
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 import javax.persistence.*;
+
 import java.io.Serializable;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
@@ -19,9 +21,9 @@ import java.util.Objects;
 public class Quiz implements Serializable {
 
     private static final long serialVersionUID = 1L;
-
+    
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "generate_date")
@@ -36,17 +38,18 @@ public class Quiz implements Serializable {
     @ManyToMany
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     @JoinTable(name = "quiz_question",
-               joinColumns = @JoinColumn(name="quizzes_id", referencedColumnName="ID"),
-               inverseJoinColumns = @JoinColumn(name="questions_id", referencedColumnName="ID"))
+               joinColumns = @JoinColumn(name = "quiz_id", referencedColumnName = "id"),
+               inverseJoinColumns = @JoinColumn(name = "question_id", referencedColumnName = "id"))
     private Set<Question> questions = new HashSet<>();
 
     @ManyToMany
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     @JoinTable(name = "quiz_label",
-               joinColumns = @JoinColumn(name="quizzes_id", referencedColumnName="ID"),
-               inverseJoinColumns = @JoinColumn(name="labels_id", referencedColumnName="ID"))
+               joinColumns = @JoinColumn(name = "quiz_id", referencedColumnName = "id"),
+               inverseJoinColumns = @JoinColumn(name = "label_id", referencedColumnName = "id"))
     private Set<Label> labels = new HashSet<>();
 
+    // jhipster-needle-entity-add-field - JHipster will add fields here, do not remove
     public Long getId() {
         return id;
     }
@@ -104,12 +107,12 @@ public class Quiz implements Serializable {
     }
 
     public Quiz addQuestion(Question question) {
-        questions.add(question);
+        this.questions.add(question);
         return this;
     }
 
     public Quiz removeQuestion(Question question) {
-        questions.remove(question);
+        this.questions.remove(question);
         return this;
     }
 
@@ -127,18 +130,19 @@ public class Quiz implements Serializable {
     }
 
     public Quiz addLabel(Label label) {
-        labels.add(label);
+        this.labels.add(label);
         return this;
     }
 
     public Quiz removeLabel(Label label) {
-        labels.remove(label);
+        this.labels.remove(label);
         return this;
     }
 
     public void setLabels(Set<Label> labels) {
         this.labels = labels;
     }
+    // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here, do not remove
 
     @Override
     public boolean equals(Object o) {
@@ -149,24 +153,24 @@ public class Quiz implements Serializable {
             return false;
         }
         Quiz quiz = (Quiz) o;
-        if (quiz.id == null || id == null) {
+        if (quiz.getId() == null || getId() == null) {
             return false;
         }
-        return Objects.equals(id, quiz.id);
+        return Objects.equals(getId(), quiz.getId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id);
+        return Objects.hashCode(getId());
     }
 
     @Override
     public String toString() {
         return "Quiz{" +
-            "id=" + id +
-            ", generateDate='" + generateDate + "'" +
-            ", timeLimit='" + timeLimit + "'" +
-            ", description='" + description + "'" +
-            '}';
+            "id=" + getId() +
+            ", generateDate='" + getGenerateDate() + "'" +
+            ", timeLimit=" + getTimeLimit() +
+            ", description='" + getDescription() + "'" +
+            "}";
     }
 }

@@ -1,9 +1,12 @@
 package com.dst.quizcat.domain;
 
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 import javax.persistence.*;
+
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -16,17 +19,19 @@ import java.util.Objects;
 public class Label implements Serializable {
 
     private static final long serialVersionUID = 1L;
-
+    
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "text")
     private String text;
 
     @ManyToOne
+    @JsonIgnoreProperties("labels")
     private Label parent;
 
+    // jhipster-needle-entity-add-field - JHipster will add fields here, do not remove
     public Long getId() {
         return id;
     }
@@ -60,6 +65,7 @@ public class Label implements Serializable {
     public void setParent(Label label) {
         this.parent = label;
     }
+    // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here, do not remove
 
     @Override
     public boolean equals(Object o) {
@@ -70,22 +76,22 @@ public class Label implements Serializable {
             return false;
         }
         Label label = (Label) o;
-        if (label.id == null || id == null) {
+        if (label.getId() == null || getId() == null) {
             return false;
         }
-        return Objects.equals(id, label.id);
+        return Objects.equals(getId(), label.getId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id);
+        return Objects.hashCode(getId());
     }
 
     @Override
     public String toString() {
         return "Label{" +
-            "id=" + id +
-            ", text='" + text + "'" +
-            '}';
+            "id=" + getId() +
+            ", text='" + getText() + "'" +
+            "}";
     }
 }

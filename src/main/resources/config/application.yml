@@ -1,8 +1,11 @@
 # ===================================================================
 # Spring Boot configuration.
 #
-# This configuration will be overriden by the Spring profile you use,
+# This configuration will be overridden by the Spring profile you use,
 # for example application-dev.yml if you use the "dev" profile.
+#
+# More information on profiles: https://www.jhipster.tech/profiles/
+# More information on configuration properties: https://www.jhipster.tech/common-application-properties/
 # ===================================================================
 
 # ===================================================================
@@ -12,10 +15,50 @@
 # ===================================================================
 
 management:
-    context-path: /management
+    endpoints:
+        web:
+            base-path: /management
+            exposure:
+                include: ["configprops", "env", "health", "info", "threaddump", "logfile", "jhi-metrics", "prometheus" ]
+    endpoint:
+        health:
+            show-details: when-authorized
+        jhi-metrics:
+            enabled: true
+    info:
+        git:
+            mode: full
     health:
         mail:
             enabled: false # When using the MailService, configure an SMTP server and set this to true
+    metrics:
+        export:
+            # Prometheus is the default metrics backend
+            prometheus:
+                enabled: true
+                step: 60
+        binders:
+            jvm:
+                enabled: true
+            processor:
+                enabled: true
+            uptime:
+                enabled: true
+            logback:
+                enabled: true
+            files:
+                enabled: true
+            integration:
+                enabled: true
+        distribution:
+            percentiles-histogram:
+                all: true
+            percentiles:
+                all: 0, 0.5, 0.75, 0.95, 0.99, 1.0
+        web:
+            server:
+                auto-time-requests: true
+
 spring:
     application:
         name: quizcat
@@ -24,10 +67,10 @@ spring:
         # Otherwise, it will be filled in by maven when building the WAR file
         # Either way, it can be overridden by `--spring.profiles.active` value passed in the commandline or `-Dspring.profiles.active` set in `JAVA_OPTS`
         active: #spring.profiles.active#
-    jackson:
-        serialization.write_dates_as_timestamps: false
     jpa:
         open-in-view: false
+        properties:
+            hibernate.jdbc.time_zone: UTC
         hibernate:
             ddl-auto: none
             naming:
@@ -39,64 +82,59 @@ spring:
         favicon:
             enabled: false
     thymeleaf:
-        mode: XHTML
-    social:
-        # see https://developers.google.com/+/web/signin/server-side-flow#step_1_create_a_client_id_and_client_secret
-        google:
-            clientId: xxx
-            clientSecret: xxx
-
-        # see https://developers.facebook.com/docs/facebook-login/v2.2
-        facebook:
-            clientId: xxx
-            clientSecret: xxx
-
-        # see https://apps.twitter.com/app/
-        twitter:
-            clientId: xxx
-            clientSecret: xxx
-
-        # jhipster-needle-add-social-configuration
-
-security:
-    basic:
-        enabled: false
+        mode: HTML
 
 server:
-    session:
-        cookie:
-            http-only: true
+    servlet:
+        session:
+            cookie:
+                http-only: true
+
+# Properties to be exposed on the /info management endpoint
+info:
+    # Comma separated list of profiles that will trigger the ribbon to show
+    display-ribbon-on-profiles: "dev"
 
 # ===================================================================
 # JHipster specific properties
+#
+# Full reference is available at: https://www.jhipster.tech/common-application-properties/
 # ===================================================================
 
 jhipster:
     async:
-        corePoolSize: 2
-        maxPoolSize: 50
-        queueCapacity: 10000
-    #cors: #By default CORS are not enabled. Uncomment to enable.
+        core-pool-size: 2
+        max-pool-size: 50
+        queue-capacity: 10000
+    # By default CORS is disabled. Uncomment to enable.
+    #cors:
         #allowed-origins: "*"
-        #allowed-methods: GET, PUT, POST, DELETE, OPTIONS
+        #allowed-methods: "*"
         #allowed-headers: "*"
-        #exposed-headers:
+        #exposed-headers: "Link,X-Total-Count"
         #allow-credentials: true
         #max-age: 1800
     mail:
         from: quizcat@localhost
     swagger:
+        default-include-pattern: /api/.*
         title: quizcat API
         description: quizcat API documentation
         version: 0.0.1
-        termsOfServiceUrl:
-        contactName:
-        contactUrl:
-        contactEmail:
+        terms-of-service-url:
+        contact-name:
+        contact-url:
+        contact-email:
         license:
-        licenseUrl:
-    social:
-        redirectAfterSignIn: "/#/home"
-    ribbon:
-        # comma separated list of profiles to show a ribbon on the GUI
-        displayOnActiveProfiles: dev
+        license-url:
+
+# ===================================================================
+# Application specific properties
+# Add your own application properties here, see the ApplicationProperties class
+# to have type-safe configuration, like in the JHipsterProperties above
+#
+# More documentation is available at:
+# https://www.jhipster.tech/common-application-properties/
+# ===================================================================
+
+# application:

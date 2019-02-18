@@ -1,11 +1,13 @@
 package com.dst.quizcat.domain;
 
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 import javax.persistence.*;
 import javax.validation.constraints.*;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
@@ -22,9 +24,9 @@ import com.dst.quizcat.domain.enumeration.AnswerSize;
 public class Question implements Serializable {
 
     private static final long serialVersionUID = 1L;
-
+    
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotNull
@@ -55,17 +57,16 @@ public class Question implements Serializable {
     private Long expectedTime;
 
     @OneToMany(mappedBy = "question")
-    @JsonIgnore
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<Attachment> attachments = new HashSet<>();
-
     @ManyToMany
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     @JoinTable(name = "question_label",
-               joinColumns = @JoinColumn(name="questions_id", referencedColumnName="ID"),
-               inverseJoinColumns = @JoinColumn(name="labels_id", referencedColumnName="ID"))
+               joinColumns = @JoinColumn(name = "question_id", referencedColumnName = "id"),
+               inverseJoinColumns = @JoinColumn(name = "label_id", referencedColumnName = "id"))
     private Set<Label> labels = new HashSet<>();
 
+    // jhipster-needle-entity-add-field - JHipster will add fields here, do not remove
     public Long getId() {
         return id;
     }
@@ -175,13 +176,13 @@ public class Question implements Serializable {
     }
 
     public Question addAttachment(Attachment attachment) {
-        attachments.add(attachment);
+        this.attachments.add(attachment);
         attachment.setQuestion(this);
         return this;
     }
 
     public Question removeAttachment(Attachment attachment) {
-        attachments.remove(attachment);
+        this.attachments.remove(attachment);
         attachment.setQuestion(null);
         return this;
     }
@@ -200,18 +201,19 @@ public class Question implements Serializable {
     }
 
     public Question addLabel(Label label) {
-        labels.add(label);
+        this.labels.add(label);
         return this;
     }
 
     public Question removeLabel(Label label) {
-        labels.remove(label);
+        this.labels.remove(label);
         return this;
     }
 
     public void setLabels(Set<Label> labels) {
         this.labels = labels;
     }
+    // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here, do not remove
 
     @Override
     public boolean equals(Object o) {
@@ -222,28 +224,28 @@ public class Question implements Serializable {
             return false;
         }
         Question question = (Question) o;
-        if (question.id == null || id == null) {
+        if (question.getId() == null || getId() == null) {
             return false;
         }
-        return Objects.equals(id, question.id);
+        return Objects.equals(getId(), question.getId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id);
+        return Objects.hashCode(getId());
     }
 
     @Override
     public String toString() {
         return "Question{" +
-            "id=" + id +
-            ", summary='" + summary + "'" +
-            ", description='" + description + "'" +
-            ", objective='" + objective + "'" +
-            ", keyAnswer='" + keyAnswer + "'" +
-            ", answerSize='" + answerSize + "'" +
-            ", answerDescription='" + answerDescription + "'" +
-            ", expectedTime='" + expectedTime + "'" +
-            '}';
+            "id=" + getId() +
+            ", summary='" + getSummary() + "'" +
+            ", description='" + getDescription() + "'" +
+            ", objective='" + getObjective() + "'" +
+            ", keyAnswer='" + getKeyAnswer() + "'" +
+            ", answerSize='" + getAnswerSize() + "'" +
+            ", answerDescription='" + getAnswerDescription() + "'" +
+            ", expectedTime=" + getExpectedTime() +
+            "}";
     }
 }

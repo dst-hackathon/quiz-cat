@@ -1,0 +1,33 @@
+<div class="row justify-content-center">
+    <div class="col-8">
+        <div *ngIf="label">
+            <h2><span jhiTranslate="quizcatApp.label.detail.title">Label</span> {{label.id}}</h2>
+            <hr>
+            <jhi-alert-error></jhi-alert-error>
+            <dl class="row-md jh-entity-details">
+                <dt><span jhiTranslate="quizcatApp.label.text">Text</span></dt>
+                <dd>
+                    <span>{{label.text}}</span>
+                </dd>
+                <dt><span jhiTranslate="quizcatApp.label.parent">Parent</span></dt>
+                <dd>
+                    <div *ngIf="label.parent">
+                        <a [routerLink]="['/label', label.parent?.id, 'view']">{{label.parent?.id}}</a>
+                    </div>
+                </dd>
+            </dl>
+
+            <button type="submit"
+                    (click)="previousState()"
+                    class="btn btn-info">
+                <fa-icon [icon]="'arrow-left'"></fa-icon>&nbsp;<span jhiTranslate="entity.action.back"> Back</span>
+            </button>
+
+            <button type="button"
+                    [routerLink]="['/label', label.id, 'edit']"
+                    class="btn btn-primary">
+                <fa-icon [icon]="'pencil-alt'"></fa-icon>&nbsp;<span jhiTranslate="entity.action.edit"> Edit</span>
+            </button>
+        </div>
+    </div>
+</div>

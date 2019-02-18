@@ -1,0 +1,53 @@
+<div class="row justify-content-center">
+    <div class="col-8">
+        <form name="editForm" role="form" novalidate (ngSubmit)="save()" #editForm="ngForm">
+            <h2 id="jhi-quiz-heading" jhiTranslate="quizcatApp.quiz.home.createOrEditLabel">Create or edit a Quiz</h2>
+            <div>
+                <jhi-alert-error></jhi-alert-error>
+                <div class="form-group" [hidden]="!quiz.id">
+                    <label for="id" jhiTranslate="global.field.id">ID</label>
+                    <input type="text" class="form-control" id="id" name="id"
+                        [(ngModel)]="quiz.id" readonly />
+                </div>
+                <div class="form-group">
+                    <label class="form-control-label" jhiTranslate="quizcatApp.quiz.generateDate" for="field_generateDate">Generate Date</label>
+                    <div class="d-flex">
+                        <input id="field_generateDate" type="datetime-local" class="form-control" name="generateDate" [(ngModel)]="generateDate" placeholder="YYYY-MM-DD HH:mm"
+                        />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-control-label" jhiTranslate="quizcatApp.quiz.timeLimit" for="field_timeLimit">Time Limit</label>
+                    <input type="number" class="form-control" name="timeLimit" id="field_timeLimit"
+                        [(ngModel)]="quiz.timeLimit" />
+                </div>
+                <div class="form-group">
+                    <label class="form-control-label" jhiTranslate="quizcatApp.quiz.description" for="field_description">Description</label>
+                    <input type="text" class="form-control" name="description" id="field_description"
+                        [(ngModel)]="quiz.description" />
+                </div>
+
+                <div class="form-group">
+                    <label jhiTranslate="quizcatApp.quiz.question" for="field_question">Question</label>
+                    <select class="form-control" id="field_question" multiple name="question" [(ngModel)]="quiz.questions">
+                        <option [ngValue]="getSelected(quiz.questions, questionOption)" *ngFor="let questionOption of questions; trackBy: trackQuestionById">{{questionOption.id}}</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label jhiTranslate="quizcatApp.quiz.label" for="field_label">Label</label>
+                    <select class="form-control" id="field_label" multiple name="label" [(ngModel)]="quiz.labels">
+                        <option [ngValue]="getSelected(quiz.labels, labelOption)" *ngFor="let labelOption of labels; trackBy: trackLabelById">{{labelOption.id}}</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <button type="button" id="cancel-save" class="btn btn-secondary"  (click)="previousState()">
+                    <fa-icon [icon]="'ban'"></fa-icon>&nbsp;<span jhiTranslate="entity.action.cancel">Cancel</span>
+                </button>
+                <button type="submit" id="save-entity" [disabled]="editForm.form.invalid || isSaving" class="btn btn-primary">
+                    <fa-icon [icon]="'save'"></fa-icon>&nbsp;<span jhiTranslate="entity.action.save">Save</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

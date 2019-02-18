@@ -4,25 +4,28 @@ import com.dst.quizcat.QuizcatApp;
 
 import com.dst.quizcat.domain.Label;
 import com.dst.quizcat.repository.LabelRepository;
+import com.dst.quizcat.web.rest.errors.ExceptionTranslator;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.Validator;
 
-import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import java.util.List;
 
+
+import static com.dst.quizcat.web.rest.TestUtil.createFormattingConversionService;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -40,17 +43,23 @@ public class LabelResourceIntTest {
     private static final String DEFAULT_TEXT = "AAAAAAAAAA";
     private static final String UPDATED_TEXT = "BBBBBBBBBB";
 
-    @Inject
+    @Autowired
     private LabelRepository labelRepository;
 
-    @Inject
+    @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
-    @Inject
+    @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
 
-    @Inject
+    @Autowired
+    private ExceptionTranslator exceptionTranslator;
+
+    @Autowired
     private EntityManager em;
+
+    @Autowired
+    private Validator validator;
 
     private MockMvc restLabelMockMvc;
 
@@ -59,11 +68,13 @@ public class LabelResourceIntTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        LabelResource labelResource = new LabelResource();
-        ReflectionTestUtils.setField(labelResource, "labelRepository", labelRepository);
+        final LabelResource labelResource = new LabelResource(labelRepository);
         this.restLabelMockMvc = MockMvcBuilders.standaloneSetup(labelResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
-            .setMessageConverters(jacksonMessageConverter).build();
+            .setControllerAdvice(exceptionTranslator)
+            .setConversionService(createFormattingConversionService())
+            .setMessageConverters(jacksonMessageConverter)
+            .setValidator(validator).build();
     }
 
     /**
@@ -74,7 +85,7 @@ public class LabelResourceIntTest {
      */
     public static Label createEntity(EntityManager em) {
         Label label = new Label()
-                .text(DEFAULT_TEXT);
+            .text(DEFAULT_TEXT);
         return label;
     }
 
@@ -89,7 +100,6 @@ public class LabelResourceIntTest {
         int databaseSizeBeforeCreate = labelRepository.findAll().size();
 
         // Create the Label
-
         restLabelMockMvc.perform(post("/api/labels")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content(TestUtil.convertObjectToJsonBytes(label)))
@@ -108,16 +118,15 @@ public class LabelResourceIntTest {
         int databaseSizeBeforeCreate = labelRepository.findAll().size();
 
         // Create the Label with an existing ID
-        Label existingLabel = new Label();
-        existingLabel.setId(1L);
+        label.setId(1L);
 
         // An entity with an existing ID cannot be created, so this API call must fail
         restLabelMockMvc.perform(post("/api/labels")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(existingLabel)))
+            .content(TestUtil.convertObjectToJsonBytes(label)))
             .andExpect(status().isBadRequest());
 
-        // Validate the Alice in the database
+        // Validate the Label in the database
         List<Label> labelList = labelRepository.findAll();
         assertThat(labelList).hasSize(databaseSizeBeforeCreate);
     }
@@ -135,7 +144,7 @@ public class LabelResourceIntTest {
             .andExpect(jsonPath("$.[*].id").value(hasItem(label.getId().intValue())))
             .andExpect(jsonPath("$.[*].text").value(hasItem(DEFAULT_TEXT.toString())));
     }
-
+    
     @Test
     @Transactional
     public void getLabel() throws Exception {
@@ -163,12 +172,15 @@ public class LabelResourceIntTest {
     public void updateLabel() throws Exception {
         // Initialize the database
         labelRepository.saveAndFlush(label);
+
         int databaseSizeBeforeUpdate = labelRepository.findAll().size();
 
         // Update the label
-        Label updatedLabel = labelRepository.findOne(label.getId());
+        Label updatedLabel = labelRepository.findById(label.getId()).get();
+        // Disconnect from session so that the updates on updatedLabel are not directly saved in db
+        em.detach(updatedLabel);
         updatedLabel
-                .text(UPDATED_TEXT);
+            .text(UPDATED_TEXT);
 
         restLabelMockMvc.perform(put("/api/labels")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
@@ -189,15 +201,15 @@ public class LabelResourceIntTest {
 
         // Create the Label
 
-        // If the entity doesn't have an ID, it will be created instead of just being updated
+        // If the entity doesn't have an ID, it will throw BadRequestAlertException
         restLabelMockMvc.perform(put("/api/labels")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content(TestUtil.convertObjectToJsonBytes(label)))
-            .andExpect(status().isCreated());
+            .andExpect(status().isBadRequest());
 
         // Validate the Label in the database
         List<Label> labelList = labelRepository.findAll();
-        assertThat(labelList).hasSize(databaseSizeBeforeUpdate + 1);
+        assertThat(labelList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
@@ -205,9 +217,10 @@ public class LabelResourceIntTest {
     public void deleteLabel() throws Exception {
         // Initialize the database
         labelRepository.saveAndFlush(label);
+
         int databaseSizeBeforeDelete = labelRepository.findAll().size();
 
-        // Get the label
+        // Delete the label
         restLabelMockMvc.perform(delete("/api/labels/{id}", label.getId())
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isOk());
@@ -215,5 +228,20 @@ public class LabelResourceIntTest {
         // Validate the database is empty
         List<Label> labelList = labelRepository.findAll();
         assertThat(labelList).hasSize(databaseSizeBeforeDelete - 1);
+    }
+
+    @Test
+    @Transactional
+    public void equalsVerifier() throws Exception {
+        TestUtil.equalsVerifier(Label.class);
+        Label label1 = new Label();
+        label1.setId(1L);
+        Label label2 = new Label();
+        label2.setId(label1.getId());
+        assertThat(label1).isEqualTo(label2);
+        label2.setId(2L);
+        assertThat(label1).isNotEqualTo(label2);
+        label1.setId(null);
+        assertThat(label1).isNotEqualTo(label2);
     }
 }
