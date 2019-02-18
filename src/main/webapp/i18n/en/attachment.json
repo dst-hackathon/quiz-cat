@@ -1,11 +1,10 @@
 {
     "quizcatApp": {
-        "attachment" : {
+        "attachment": {
             "home": {
                 "title": "Attachments",
                 "createLabel": "Create a new Attachment",
-                "createOrEditLabel": "Create or edit a Attachment",
-                "search": "Search for Attachment"
+                "createOrEditLabel": "Create or edit a Attachment"
             },
             "created": "A new Attachment is created with identifier {{ param }}",
             "updated": "A Attachment is updated with identifier {{ param }}",

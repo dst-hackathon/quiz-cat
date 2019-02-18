@@ -1,10 +1,13 @@
 package com.dst.quizcat.domain;
 
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 import javax.persistence.*;
 import javax.validation.constraints.*;
+
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -17,9 +20,9 @@ import java.util.Objects;
 public class Attachment implements Serializable {
 
     private static final long serialVersionUID = 1L;
-
+    
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "name")
@@ -49,12 +52,14 @@ public class Attachment implements Serializable {
     @Column(name = "content_type", nullable = false)
     private String contentType;
 
-    @Column(name = "comment")
+    @Column(name = "jhi_comment")
     private String comment;
 
     @ManyToOne
+    @JsonIgnoreProperties("attachments")
     private Question question;
 
+    // jhipster-needle-entity-add-field - JHipster will add fields here, do not remove
     public Long getId() {
         return id;
     }
@@ -192,6 +197,7 @@ public class Attachment implements Serializable {
     public void setQuestion(Question question) {
         this.question = question;
     }
+    // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here, do not remove
 
     @Override
     public boolean equals(Object o) {
@@ -202,30 +208,30 @@ public class Attachment implements Serializable {
             return false;
         }
         Attachment attachment = (Attachment) o;
-        if (attachment.id == null || id == null) {
+        if (attachment.getId() == null || getId() == null) {
             return false;
         }
-        return Objects.equals(id, attachment.id);
+        return Objects.equals(getId(), attachment.getId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id);
+        return Objects.hashCode(getId());
     }
 
     @Override
     public String toString() {
         return "Attachment{" +
-            "id=" + id +
-            ", name='" + name + "'" +
-            ", imagePath='" + imagePath + "'" +
-            ", image='" + image + "'" +
-            ", imageContentType='" + imageContentType + "'" +
-            ", attachmentPath='" + attachmentPath + "'" +
-            ", attachment='" + attachment + "'" +
-            ", attachmentContentType='" + attachmentContentType + "'" +
-            ", contentType='" + contentType + "'" +
-            ", comment='" + comment + "'" +
-            '}';
+            "id=" + getId() +
+            ", name='" + getName() + "'" +
+            ", imagePath='" + getImagePath() + "'" +
+            ", image='" + getImage() + "'" +
+            ", imageContentType='" + getImageContentType() + "'" +
+            ", attachmentPath='" + getAttachmentPath() + "'" +
+            ", attachment='" + getAttachment() + "'" +
+            ", attachmentContentType='" + getAttachmentContentType() + "'" +
+            ", contentType='" + getContentType() + "'" +
+            ", comment='" + getComment() + "'" +
+            "}";
     }
 }

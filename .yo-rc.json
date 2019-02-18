@@ -1,6 +1,6 @@
 {
   "generator-jhipster": {
-    "jhipsterVersion": "3.12.1",
+    "jhipsterVersion": "5.8.1",
     "baseName": "quizcat",
     "packageName": "com.dst.quizcat",
     "packageFolder": "com/dst/quizcat",
@@ -30,6 +30,13 @@
     "languages": [
       "en"
     ],
-    "serviceDiscoveryType": false
+    "serviceDiscoveryType": false,
+    "cacheProvider": "ehcache",
+    "enableHibernateCache": true,
+    "clientFramework": "angularX",
+    "clientPackageManager": "npm",
+    "entitySuffix": "",
+    "dtoSuffix": "DTO",
+    "otherModules": []
   }
 }

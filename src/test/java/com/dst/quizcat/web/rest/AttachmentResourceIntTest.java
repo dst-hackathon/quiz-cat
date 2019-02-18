@@ -4,26 +4,29 @@ import com.dst.quizcat.QuizcatApp;
 
 import com.dst.quizcat.domain.Attachment;
 import com.dst.quizcat.repository.AttachmentRepository;
+import com.dst.quizcat.web.rest.errors.ExceptionTranslator;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Base64Utils;
+import org.springframework.validation.Validator;
 
-import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import java.util.List;
 
+
+import static com.dst.quizcat.web.rest.TestUtil.createFormattingConversionService;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -45,7 +48,7 @@ public class AttachmentResourceIntTest {
     private static final String UPDATED_IMAGE_PATH = "BBBBBBBBBB";
 
     private static final byte[] DEFAULT_IMAGE = TestUtil.createByteArray(1, "0");
-    private static final byte[] UPDATED_IMAGE = TestUtil.createByteArray(2, "1");
+    private static final byte[] UPDATED_IMAGE = TestUtil.createByteArray(1, "1");
     private static final String DEFAULT_IMAGE_CONTENT_TYPE = "image/jpg";
     private static final String UPDATED_IMAGE_CONTENT_TYPE = "image/png";
 
@@ -53,7 +56,7 @@ public class AttachmentResourceIntTest {
     private static final String UPDATED_ATTACHMENT_PATH = "BBBBBBBBBB";
 
     private static final byte[] DEFAULT_ATTACHMENT = TestUtil.createByteArray(1, "0");
-    private static final byte[] UPDATED_ATTACHMENT = TestUtil.createByteArray(2, "1");
+    private static final byte[] UPDATED_ATTACHMENT = TestUtil.createByteArray(1, "1");
     private static final String DEFAULT_ATTACHMENT_CONTENT_TYPE = "image/jpg";
     private static final String UPDATED_ATTACHMENT_CONTENT_TYPE = "image/png";
 
@@ -63,17 +66,23 @@ public class AttachmentResourceIntTest {
     private static final String DEFAULT_COMMENT = "AAAAAAAAAA";
     private static final String UPDATED_COMMENT = "BBBBBBBBBB";
 
-    @Inject
+    @Autowired
     private AttachmentRepository attachmentRepository;
 
-    @Inject
+    @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
-    @Inject
+    @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
 
-    @Inject
+    @Autowired
+    private ExceptionTranslator exceptionTranslator;
+
+    @Autowired
     private EntityManager em;
+
+    @Autowired
+    private Validator validator;
 
     private MockMvc restAttachmentMockMvc;
 
@@ -82,11 +91,13 @@ public class AttachmentResourceIntTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        AttachmentResource attachmentResource = new AttachmentResource();
-        ReflectionTestUtils.setField(attachmentResource, "attachmentRepository", attachmentRepository);
+        final AttachmentResource attachmentResource = new AttachmentResource(attachmentRepository);
         this.restAttachmentMockMvc = MockMvcBuilders.standaloneSetup(attachmentResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
-            .setMessageConverters(jacksonMessageConverter).build();
+            .setControllerAdvice(exceptionTranslator)
+            .setConversionService(createFormattingConversionService())
+            .setMessageConverters(jacksonMessageConverter)
+            .setValidator(validator).build();
     }
 
     /**
@@ -97,15 +108,15 @@ public class AttachmentResourceIntTest {
      */
     public static Attachment createEntity(EntityManager em) {
         Attachment attachment = new Attachment()
-                .name(DEFAULT_NAME)
-                .imagePath(DEFAULT_IMAGE_PATH)
-                .image(DEFAULT_IMAGE)
-                .imageContentType(DEFAULT_IMAGE_CONTENT_TYPE)
-                .attachmentPath(DEFAULT_ATTACHMENT_PATH)
-                .attachment(DEFAULT_ATTACHMENT)
-                .attachmentContentType(DEFAULT_ATTACHMENT_CONTENT_TYPE)
-                .contentType(DEFAULT_CONTENT_TYPE)
-                .comment(DEFAULT_COMMENT);
+            .name(DEFAULT_NAME)
+            .imagePath(DEFAULT_IMAGE_PATH)
+            .image(DEFAULT_IMAGE)
+            .imageContentType(DEFAULT_IMAGE_CONTENT_TYPE)
+            .attachmentPath(DEFAULT_ATTACHMENT_PATH)
+            .attachment(DEFAULT_ATTACHMENT)
+            .attachmentContentType(DEFAULT_ATTACHMENT_CONTENT_TYPE)
+            .contentType(DEFAULT_CONTENT_TYPE)
+            .comment(DEFAULT_COMMENT);
         return attachment;
     }
 
@@ -120,7 +131,6 @@ public class AttachmentResourceIntTest {
         int databaseSizeBeforeCreate = attachmentRepository.findAll().size();
 
         // Create the Attachment
-
         restAttachmentMockMvc.perform(post("/api/attachments")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content(TestUtil.convertObjectToJsonBytes(attachment)))
@@ -147,16 +157,15 @@ public class AttachmentResourceIntTest {
         int databaseSizeBeforeCreate = attachmentRepository.findAll().size();
 
         // Create the Attachment with an existing ID
-        Attachment existingAttachment = new Attachment();
-        existingAttachment.setId(1L);
+        attachment.setId(1L);
 
         // An entity with an existing ID cannot be created, so this API call must fail
         restAttachmentMockMvc.perform(post("/api/attachments")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(existingAttachment)))
+            .content(TestUtil.convertObjectToJsonBytes(attachment)))
             .andExpect(status().isBadRequest());
 
-        // Validate the Alice in the database
+        // Validate the Attachment in the database
         List<Attachment> attachmentList = attachmentRepository.findAll();
         assertThat(attachmentList).hasSize(databaseSizeBeforeCreate);
     }
@@ -200,7 +209,7 @@ public class AttachmentResourceIntTest {
             .andExpect(jsonPath("$.[*].contentType").value(hasItem(DEFAULT_CONTENT_TYPE.toString())))
             .andExpect(jsonPath("$.[*].comment").value(hasItem(DEFAULT_COMMENT.toString())));
     }
-
+    
     @Test
     @Transactional
     public void getAttachment() throws Exception {
@@ -236,20 +245,23 @@ public class AttachmentResourceIntTest {
     public void updateAttachment() throws Exception {
         // Initialize the database
         attachmentRepository.saveAndFlush(attachment);
+
         int databaseSizeBeforeUpdate = attachmentRepository.findAll().size();
 
         // Update the attachment
-        Attachment updatedAttachment = attachmentRepository.findOne(attachment.getId());
+        Attachment updatedAttachment = attachmentRepository.findById(attachment.getId()).get();
+        // Disconnect from session so that the updates on updatedAttachment are not directly saved in db
+        em.detach(updatedAttachment);
         updatedAttachment
-                .name(UPDATED_NAME)
-                .imagePath(UPDATED_IMAGE_PATH)
-                .image(UPDATED_IMAGE)
-                .imageContentType(UPDATED_IMAGE_CONTENT_TYPE)
-                .attachmentPath(UPDATED_ATTACHMENT_PATH)
-                .attachment(UPDATED_ATTACHMENT)
-                .attachmentContentType(UPDATED_ATTACHMENT_CONTENT_TYPE)
-                .contentType(UPDATED_CONTENT_TYPE)
-                .comment(UPDATED_COMMENT);
+            .name(UPDATED_NAME)
+            .imagePath(UPDATED_IMAGE_PATH)
+            .image(UPDATED_IMAGE)
+            .imageContentType(UPDATED_IMAGE_CONTENT_TYPE)
+            .attachmentPath(UPDATED_ATTACHMENT_PATH)
+            .attachment(UPDATED_ATTACHMENT)
+            .attachmentContentType(UPDATED_ATTACHMENT_CONTENT_TYPE)
+            .contentType(UPDATED_CONTENT_TYPE)
+            .comment(UPDATED_COMMENT);
 
         restAttachmentMockMvc.perform(put("/api/attachments")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
@@ -278,15 +290,15 @@ public class AttachmentResourceIntTest {
 
         // Create the Attachment
 
-        // If the entity doesn't have an ID, it will be created instead of just being updated
+        // If the entity doesn't have an ID, it will throw BadRequestAlertException
         restAttachmentMockMvc.perform(put("/api/attachments")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content(TestUtil.convertObjectToJsonBytes(attachment)))
-            .andExpect(status().isCreated());
+            .andExpect(status().isBadRequest());
 
         // Validate the Attachment in the database
         List<Attachment> attachmentList = attachmentRepository.findAll();
-        assertThat(attachmentList).hasSize(databaseSizeBeforeUpdate + 1);
+        assertThat(attachmentList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
@@ -294,9 +306,10 @@ public class AttachmentResourceIntTest {
     public void deleteAttachment() throws Exception {
         // Initialize the database
         attachmentRepository.saveAndFlush(attachment);
+
         int databaseSizeBeforeDelete = attachmentRepository.findAll().size();
 
-        // Get the attachment
+        // Delete the attachment
         restAttachmentMockMvc.perform(delete("/api/attachments/{id}", attachment.getId())
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isOk());
@@ -304,5 +317,20 @@ public class AttachmentResourceIntTest {
         // Validate the database is empty
         List<Attachment> attachmentList = attachmentRepository.findAll();
         assertThat(attachmentList).hasSize(databaseSizeBeforeDelete - 1);
+    }
+
+    @Test
+    @Transactional
+    public void equalsVerifier() throws Exception {
+        TestUtil.equalsVerifier(Attachment.class);
+        Attachment attachment1 = new Attachment();
+        attachment1.setId(1L);
+        Attachment attachment2 = new Attachment();
+        attachment2.setId(attachment1.getId());
+        assertThat(attachment1).isEqualTo(attachment2);
+        attachment2.setId(2L);
+        assertThat(attachment1).isNotEqualTo(attachment2);
+        attachment1.setId(null);
+        assertThat(attachment1).isNotEqualTo(attachment2);
     }
 }

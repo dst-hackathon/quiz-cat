@@ -1,0 +1,88 @@
+<div>
+    <h2 id="page-heading">
+        <span jhiTranslate="quizcatApp.attachment.home.title">Attachments</span>
+        <button id="jh-create-entity" class="btn btn-primary float-right jh-create-entity create-attachment" [routerLink]="['/attachment/new']">
+            <fa-icon [icon]="'plus'"></fa-icon>
+            <span  jhiTranslate="quizcatApp.attachment.home.createLabel">
+            Create new Attachment
+            </span>
+        </button>
+    </h2>
+    <jhi-alert></jhi-alert>
+    <br/>
+    <div class="table-responsive" *ngIf="attachments">
+        <table class="table table-striped">
+            <thead>
+            <tr jhiSort [(predicate)]="predicate" [(ascending)]="reverse" [callback]="transition.bind(this)">
+            <th jhiSortBy="id"><span jhiTranslate="global.field.id">ID</span> <fa-icon [icon]="'sort'"></fa-icon></th>
+            <th jhiSortBy="name"><span jhiTranslate="quizcatApp.attachment.name">Name</span> <fa-icon [icon]="'sort'"></fa-icon></th>
+            <th jhiSortBy="imagePath"><span jhiTranslate="quizcatApp.attachment.imagePath">Image Path</span> <fa-icon [icon]="'sort'"></fa-icon></th>
+            <th jhiSortBy="image"><span jhiTranslate="quizcatApp.attachment.image">Image</span> <fa-icon [icon]="'sort'"></fa-icon></th>
+            <th jhiSortBy="attachmentPath"><span jhiTranslate="quizcatApp.attachment.attachmentPath">Attachment Path</span> <fa-icon [icon]="'sort'"></fa-icon></th>
+            <th jhiSortBy="attachment"><span jhiTranslate="quizcatApp.attachment.attachment">Attachment</span> <fa-icon [icon]="'sort'"></fa-icon></th>
+            <th jhiSortBy="contentType"><span jhiTranslate="quizcatApp.attachment.contentType">Content Type</span> <fa-icon [icon]="'sort'"></fa-icon></th>
+            <th jhiSortBy="comment"><span jhiTranslate="quizcatApp.attachment.comment">Comment</span> <fa-icon [icon]="'sort'"></fa-icon></th>
+            <th jhiSortBy="question.id"><span jhiTranslate="quizcatApp.attachment.question">Question</span> <fa-icon [icon]="'sort'"></fa-icon></th>
+            <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr *ngFor="let attachment of attachments ;trackBy: trackId">
+                <td><a [routerLink]="['/attachment', attachment.id, 'view' ]">{{attachment.id}}</a></td>
+                <td>{{attachment.name}}</td>
+                <td>{{attachment.imagePath}}</td>
+                <td>
+                    <a *ngIf="attachment.image" (click)="openFile(attachment.imageContentType, attachment.image)">
+                        <img [src]="'data:' + attachment.imageContentType + ';base64,' + attachment.image" style="max-height: 30px;" alt="attachment image"/>
+                    </a>
+                    <span *ngIf="attachment.image">{{attachment.imageContentType}}, {{byteSize(attachment.image)}}</span>
+                </td>
+                <td>{{attachment.attachmentPath}}</td>
+                <td>
+                    <a *ngIf="attachment.attachment" (click)="openFile(attachment.attachmentContentType, attachment.attachment)" jhiTranslate="entity.action.open">open</a>
+                    <span *ngIf="attachment.attachment">{{attachment.attachmentContentType}}, {{byteSize(attachment.attachment)}}</span>
+                </td>
+                <td>{{attachment.contentType}}</td>
+                <td>{{attachment.comment}}</td>
+                <td>
+                    <div *ngIf="attachment.question">
+                        <a [routerLink]="['../question', attachment.question?.id, 'view' ]" >{{attachment.question?.id}}</a>
+                    </div>
+                </td>
+                <td class="text-right">
+                    <div class="btn-group flex-btn-group-container">
+                        <button type="submit"
+                                [routerLink]="['/attachment', attachment.id, 'view' ]"
+                                class="btn btn-info btn-sm">
+                            <fa-icon [icon]="'eye'"></fa-icon>
+                            <span class="d-none d-md-inline" jhiTranslate="entity.action.view">View</span>
+                        </button>
+                        <button type="submit"
+                                [routerLink]="['/attachment', attachment.id, 'edit']"
+                                class="btn btn-primary btn-sm">
+                            <fa-icon [icon]="'pencil-alt'"></fa-icon>
+                            <span class="d-none d-md-inline" jhiTranslate="entity.action.edit">Edit</span>
+                        </button>
+                        <button type="submit"
+                                [routerLink]="['/', 'attachment', { outlets: { popup: attachment.id + '/delete'} }]"
+                                replaceUrl="true"
+                                queryParamsHandling="merge"
+                                class="btn btn-danger btn-sm">
+                            <fa-icon [icon]="'times'"></fa-icon>
+                            <span class="d-none d-md-inline" jhiTranslate="entity.action.delete">Delete</span>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div *ngIf="attachments && attachments.length">
+        <div class="row justify-content-center">
+            <jhi-item-count [page]="page" [total]="totalItems" [maxSize]="5" [itemsPerPage]="itemsPerPage"></jhi-item-count>
+        </div>
+        <div class="row justify-content-center">
+            <ngb-pagination [collectionSize]="totalItems" [(page)]="page" [pageSize]="itemsPerPage" [maxSize]="5" [rotate]="true" [boundaryLinks]="true" (pageChange)="loadPage(page)"></ngb-pagination>
+        </div>
+    </div>
+</div>

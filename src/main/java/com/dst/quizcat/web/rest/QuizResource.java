@@ -1,13 +1,10 @@
 package com.dst.quizcat.web.rest;
-
-import com.codahale.metrics.annotation.Timed;
 import com.dst.quizcat.domain.Quiz;
-
 import com.dst.quizcat.repository.QuizRepository;
+import com.dst.quizcat.web.rest.errors.BadRequestAlertException;
 import com.dst.quizcat.web.rest.util.HeaderUtil;
 import com.dst.quizcat.web.rest.util.PaginationUtil;
-
-import io.swagger.annotations.ApiParam;
+import io.github.jhipster.web.util.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -17,9 +14,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.inject.Inject;
 import java.net.URI;
 import java.net.URISyntaxException;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -31,9 +28,14 @@ import java.util.Optional;
 public class QuizResource {
 
     private final Logger log = LoggerFactory.getLogger(QuizResource.class);
-        
-    @Inject
-    private QuizRepository quizRepository;
+
+    private static final String ENTITY_NAME = "quiz";
+
+    private final QuizRepository quizRepository;
+
+    public QuizResource(QuizRepository quizRepository) {
+        this.quizRepository = quizRepository;
+    }
 
     /**
      * POST  /quizzes : Create a new quiz.
@@ -43,15 +45,14 @@ public class QuizResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping("/quizzes")
-    @Timed
     public ResponseEntity<Quiz> createQuiz(@RequestBody Quiz quiz) throws URISyntaxException {
         log.debug("REST request to save Quiz : {}", quiz);
         if (quiz.getId() != null) {
-            return ResponseEntity.badRequest().headers(HeaderUtil.createFailureAlert("quiz", "idexists", "A new quiz cannot already have an ID")).body(null);
+            throw new BadRequestAlertException("A new quiz cannot already have an ID", ENTITY_NAME, "idexists");
         }
         Quiz result = quizRepository.save(quiz);
         return ResponseEntity.created(new URI("/api/quizzes/" + result.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert("quiz", result.getId().toString()))
+            .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
     }
 
@@ -61,19 +62,18 @@ public class QuizResource {
      * @param quiz the quiz to update
      * @return the ResponseEntity with status 200 (OK) and with body the updated quiz,
      * or with status 400 (Bad Request) if the quiz is not valid,
-     * or with status 500 (Internal Server Error) if the quiz couldnt be updated
+     * or with status 500 (Internal Server Error) if the quiz couldn't be updated
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PutMapping("/quizzes")
-    @Timed
     public ResponseEntity<Quiz> updateQuiz(@RequestBody Quiz quiz) throws URISyntaxException {
         log.debug("REST request to update Quiz : {}", quiz);
         if (quiz.getId() == null) {
-            return createQuiz(quiz);
+            throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
         Quiz result = quizRepository.save(quiz);
         return ResponseEntity.ok()
-            .headers(HeaderUtil.createEntityUpdateAlert("quiz", quiz.getId().toString()))
+            .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, quiz.getId().toString()))
             .body(result);
     }
 
@@ -81,17 +81,20 @@ public class QuizResource {
      * GET  /quizzes : get all the quizzes.
      *
      * @param pageable the pagination information
+     * @param eagerload flag to eager load entities from relationships (This is applicable for many-to-many)
      * @return the ResponseEntity with status 200 (OK) and the list of quizzes in body
-     * @throws URISyntaxException if there is an error to generate the pagination HTTP headers
      */
     @GetMapping("/quizzes")
-    @Timed
-    public ResponseEntity<List<Quiz>> getAllQuizzes(@ApiParam Pageable pageable)
-        throws URISyntaxException {
+    public ResponseEntity<List<Quiz>> getAllQuizzes(Pageable pageable, @RequestParam(required = false, defaultValue = "false") boolean eagerload) {
         log.debug("REST request to get a page of Quizzes");
-        Page<Quiz> page = quizRepository.findAll(pageable);
-        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/quizzes");
-        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+        Page<Quiz> page;
+        if (eagerload) {
+            page = quizRepository.findAllWithEagerRelationships(pageable);
+        } else {
+            page = quizRepository.findAll(pageable);
+        }
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, String.format("/api/quizzes?eagerload=%b", eagerload));
+        return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
 
     /**
@@ -101,15 +104,10 @@ public class QuizResource {
      * @return the ResponseEntity with status 200 (OK) and with body the quiz, or with status 404 (Not Found)
      */
     @GetMapping("/quizzes/{id}")
-    @Timed
     public ResponseEntity<Quiz> getQuiz(@PathVariable Long id) {
         log.debug("REST request to get Quiz : {}", id);
-        Quiz quiz = quizRepository.findOneWithEagerRelationships(id);
-        return Optional.ofNullable(quiz)
-            .map(result -> new ResponseEntity<>(
-                result,
-                HttpStatus.OK))
-            .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        Optional<Quiz> quiz = quizRepository.findOneWithEagerRelationships(id);
+        return ResponseUtil.wrapOrNotFound(quiz);
     }
 
     /**
@@ -119,11 +117,9 @@ public class QuizResource {
      * @return the ResponseEntity with status 200 (OK)
      */
     @DeleteMapping("/quizzes/{id}")
-    @Timed
     public ResponseEntity<Void> deleteQuiz(@PathVariable Long id) {
         log.debug("REST request to delete Quiz : {}", id);
-        quizRepository.delete(id);
-        return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert("quiz", id.toString())).build();
+        quizRepository.deleteById(id);
+        return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
-
 }
