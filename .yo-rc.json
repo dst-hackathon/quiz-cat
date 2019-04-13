@@ -1,6 +1,6 @@
 {
   "generator-jhipster": {
-    "jhipsterVersion": "5.8.1",
+    "jhipsterVersion": "5.8.2",
     "baseName": "quizcat",
     "packageName": "com.dst.quizcat",
     "packageFolder": "com/dst/quizcat",
