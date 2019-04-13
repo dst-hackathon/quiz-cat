@@ -1,0 +1,68 @@
+{
+    "fluentMethods": true,
+    "relationships": [
+        {
+            "relationshipType": "one-to-many",
+            "relationshipName": "attachment",
+            "otherEntityName": "attachment",
+            "otherEntityRelationshipName": "question"
+        },
+        {
+            "relationshipType": "many-to-many",
+            "otherEntityRelationshipName": "",
+            "relationshipName": "label",
+            "otherEntityName": "label",
+            "otherEntityField": "id",
+            "ownerSide": true
+        }
+    ],
+    "fields": [
+        {
+            "fieldName": "summary",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "description",
+            "fieldType": "byte[]",
+            "fieldTypeBlobContent": "text"
+        },
+        {
+            "fieldName": "objective",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "keyAnswer",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "answerSize",
+            "fieldType": "AnswerSize",
+            "fieldValues": "XS,S,M,L,XL",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "answerDescription",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "expectedTime",
+            "fieldType": "Long"
+        }
+    ],
+    "changelogDate": "20161218095445",
+    "entityTableName": "question",
+    "dto": "no",
+    "pagination": "infinite-scroll",
+    "service": "no"
+}

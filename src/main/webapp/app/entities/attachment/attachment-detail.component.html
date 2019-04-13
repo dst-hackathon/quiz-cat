@@ -1,0 +1,65 @@
+<div class="row justify-content-center">
+    <div class="col-8">
+        <div *ngIf="attachment">
+            <h2><span jhiTranslate="quizcatApp.attachment.detail.title">Attachment</span> {{attachment.id}}</h2>
+            <hr>
+            <jhi-alert-error></jhi-alert-error>
+            <dl class="row-md jh-entity-details">
+                <dt><span jhiTranslate="quizcatApp.attachment.name">Name</span></dt>
+                <dd>
+                    <span>{{attachment.name}}</span>
+                </dd>
+                <dt><span jhiTranslate="quizcatApp.attachment.imagePath">Image Path</span></dt>
+                <dd>
+                    <span>{{attachment.imagePath}}</span>
+                </dd>
+                <dt><span jhiTranslate="quizcatApp.attachment.image">Image</span></dt>
+                <dd>
+                    <div *ngIf="attachment.image">
+                        <a (click)="openFile(attachment.imageContentType, attachment.image)">
+                            <img [src]="'data:' + attachment.imageContentType + ';base64,' + attachment.image" style="max-width: 100%;" alt="attachment image"/>
+                        </a>
+                        {{attachment.imageContentType}}, {{byteSize(attachment.image)}}
+                    </div>
+                </dd>
+                <dt><span jhiTranslate="quizcatApp.attachment.attachmentPath">Attachment Path</span></dt>
+                <dd>
+                    <span>{{attachment.attachmentPath}}</span>
+                </dd>
+                <dt><span jhiTranslate="quizcatApp.attachment.attachment">Attachment</span></dt>
+                <dd>
+                    <div *ngIf="attachment.attachment">
+                        <a (click)="openFile(attachment.attachmentContentType, attachment.attachment)" jhiTranslate="entity.action.open">open</a>
+                        {{attachment.attachmentContentType}}, {{byteSize(attachment.attachment)}}
+                    </div>
+                </dd>
+                <dt><span jhiTranslate="quizcatApp.attachment.contentType">Content Type</span></dt>
+                <dd>
+                    <span>{{attachment.contentType}}</span>
+                </dd>
+                <dt><span jhiTranslate="quizcatApp.attachment.comment">Comment</span></dt>
+                <dd>
+                    <span>{{attachment.comment}}</span>
+                </dd>
+                <dt><span jhiTranslate="quizcatApp.attachment.question">Question</span></dt>
+                <dd>
+                    <div *ngIf="attachment.question">
+                        <a [routerLink]="['/question', attachment.question?.id, 'view']">{{attachment.question?.id}}</a>
+                    </div>
+                </dd>
+            </dl>
+
+            <button type="submit"
+                    (click)="previousState()"
+                    class="btn btn-info">
+                <fa-icon [icon]="'arrow-left'"></fa-icon>&nbsp;<span jhiTranslate="entity.action.back"> Back</span>
+            </button>
+
+            <button type="button"
+                    [routerLink]="['/attachment', attachment.id, 'edit']"
+                    class="btn btn-primary">
+                <fa-icon [icon]="'pencil-alt'"></fa-icon>&nbsp;<span jhiTranslate="entity.action.edit"> Edit</span>
+            </button>
+        </div>
+    </div>
+</div>

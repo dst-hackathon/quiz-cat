@@ -1,0 +1,94 @@
+<div class="row justify-content-center">
+    <div class="col-8">
+        <form name="editForm" role="form" novalidate (ngSubmit)="save()" #editForm="ngForm">
+            <h2 id="jhi-question-heading" jhiTranslate="quizcatApp.question.home.createOrEditLabel">Create or edit a Question</h2>
+            <div>
+                <jhi-alert-error></jhi-alert-error>
+                <div class="form-group" [hidden]="!question.id">
+                    <label for="id" jhiTranslate="global.field.id">ID</label>
+                    <input type="text" class="form-control" id="id" name="id"
+                        [(ngModel)]="question.id" readonly />
+                </div>
+                <div class="form-group">
+                    <label class="form-control-label" jhiTranslate="quizcatApp.question.summary" for="field_summary">Summary</label>
+                    <input type="text" class="form-control" name="summary" id="field_summary"
+                        [(ngModel)]="question.summary" required/>
+                    <div [hidden]="!(editForm.controls.summary?.dirty && editForm.controls.summary?.invalid)">
+                        <small class="form-text text-danger"
+                        [hidden]="!editForm.controls.summary?.errors?.required" jhiTranslate="entity.validation.required">
+                        This field is required.
+                        </small>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-control-label" jhiTranslate="quizcatApp.question.description" for="field_description">Description</label>
+                    <textarea class="form-control" name="description" id="field_description"
+                        [(ngModel)]="question.description" ></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-control-label" jhiTranslate="quizcatApp.question.objective" for="field_objective">Objective</label>
+                    <input type="text" class="form-control" name="objective" id="field_objective"
+                        [(ngModel)]="question.objective" required/>
+                    <div [hidden]="!(editForm.controls.objective?.dirty && editForm.controls.objective?.invalid)">
+                        <small class="form-text text-danger"
+                        [hidden]="!editForm.controls.objective?.errors?.required" jhiTranslate="entity.validation.required">
+                        This field is required.
+                        </small>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-control-label" jhiTranslate="quizcatApp.question.keyAnswer" for="field_keyAnswer">Key Answer</label>
+                    <input type="text" class="form-control" name="keyAnswer" id="field_keyAnswer"
+                        [(ngModel)]="question.keyAnswer" required/>
+                    <div [hidden]="!(editForm.controls.keyAnswer?.dirty && editForm.controls.keyAnswer?.invalid)">
+                        <small class="form-text text-danger"
+                        [hidden]="!editForm.controls.keyAnswer?.errors?.required" jhiTranslate="entity.validation.required">
+                        This field is required.
+                        </small>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-control-label" jhiTranslate="quizcatApp.question.answerSize" for="field_answerSize">Answer Size</label>
+                    <select class="form-control" name="answerSize" [(ngModel)]="question.answerSize" id="field_answerSize"  required>
+                        <option value="XS">{{'quizcatApp.AnswerSize.XS' | translate}}</option>
+                        <option value="S">{{'quizcatApp.AnswerSize.S' | translate}}</option>
+                        <option value="M">{{'quizcatApp.AnswerSize.M' | translate}}</option>
+                        <option value="L">{{'quizcatApp.AnswerSize.L' | translate}}</option>
+                        <option value="XL">{{'quizcatApp.AnswerSize.XL' | translate}}</option>
+                    </select>
+                    <div [hidden]="!(editForm.controls.answerSize?.dirty && editForm.controls.answerSize?.invalid)">
+                        <small class="form-text text-danger"
+                        [hidden]="!editForm.controls.answerSize?.errors?.required" jhiTranslate="entity.validation.required">
+                        This field is required.
+                        </small>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-control-label" jhiTranslate="quizcatApp.question.answerDescription" for="field_answerDescription">Answer Description</label>
+                    <input type="text" class="form-control" name="answerDescription" id="field_answerDescription"
+                        [(ngModel)]="question.answerDescription" />
+                </div>
+                <div class="form-group">
+                    <label class="form-control-label" jhiTranslate="quizcatApp.question.expectedTime" for="field_expectedTime">Expected Time</label>
+                    <input type="number" class="form-control" name="expectedTime" id="field_expectedTime"
+                        [(ngModel)]="question.expectedTime" />
+                </div>
+
+                <div class="form-group">
+                    <label jhiTranslate="quizcatApp.question.label" for="field_label">Label</label>
+                    <select class="form-control" id="field_label" multiple name="label" [(ngModel)]="question.labels">
+                        <option [ngValue]="getSelected(question.labels, labelOption)" *ngFor="let labelOption of labels; trackBy: trackLabelById">{{labelOption.id}}</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <button type="button" id="cancel-save" class="btn btn-secondary"  (click)="previousState()">
+                    <fa-icon [icon]="'ban'"></fa-icon>&nbsp;<span jhiTranslate="entity.action.cancel">Cancel</span>
+                </button>
+                <button type="submit" id="save-entity" [disabled]="editForm.form.invalid || isSaving" class="btn btn-primary">
+                    <fa-icon [icon]="'save'"></fa-icon>&nbsp;<span jhiTranslate="entity.action.save">Save</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,40 @@
+{
+    "fluentMethods": true,
+    "relationships": [
+        {
+            "relationshipType": "many-to-many",
+            "otherEntityRelationshipName": "",
+            "relationshipName": "question",
+            "otherEntityName": "question",
+            "otherEntityField": "id",
+            "ownerSide": true
+        },
+        {
+            "relationshipType": "many-to-many",
+            "otherEntityRelationshipName": "",
+            "relationshipName": "label",
+            "otherEntityName": "label",
+            "otherEntityField": "id",
+            "ownerSide": true
+        }
+    ],
+    "fields": [
+        {
+            "fieldName": "generateDate",
+            "fieldType": "ZonedDateTime"
+        },
+        {
+            "fieldName": "timeLimit",
+            "fieldType": "Long"
+        },
+        {
+            "fieldName": "description",
+            "fieldType": "String"
+        }
+    ],
+    "changelogDate": "20161218095444",
+    "entityTableName": "quiz",
+    "dto": "no",
+    "pagination": "pagination",
+    "service": "no"
+}
